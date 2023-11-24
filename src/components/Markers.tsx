@@ -2,14 +2,14 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 
 interface MarkerProps {
   map: any;
-  storeDatas: any[];
+  stores: any[];
   setCurrentStore: Dispatch<SetStateAction<any>>;
 }
 
-const Markers = ({ map, storeDatas, setCurrentStore }: MarkerProps) => {
+const Markers = ({ map, stores, setCurrentStore }: MarkerProps) => {
   const loadKakaoMarkers = () => {
     if (map) {
-      storeDatas.map((store) => {
+      stores.map((store) => {
         const imageSrc = store?.bizcnd_code_nm
           ? `/images/markers/${store?.bizcnd_code_nm}.png`
           : "/images/markers/default.png";
