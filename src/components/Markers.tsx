@@ -1,8 +1,9 @@
+import { StoreType } from "@/interface";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
 interface MarkerProps {
   map: any;
-  stores: any[];
+  stores: StoreType[];
   setCurrentStore: Dispatch<SetStateAction<any>>;
 }
 
@@ -10,14 +11,14 @@ const Markers = ({ map, stores, setCurrentStore }: MarkerProps) => {
   const loadKakaoMarkers = () => {
     if (map) {
       stores.map((store) => {
-        const imageSrc = store?.bizcnd_code_nm
-          ? `/images/markers/${store?.bizcnd_code_nm}.png`
+        const imageSrc = store?.category
+          ? `/images/markers/${store?.category}.png`
           : "/images/markers/default.png";
         const imageSize = new window.kakao.maps.Size(40, 40);
         const imageOption = { offset: new window.kakao.maps.Point(27, 69) };
 
         const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-        const markerPosition = new window.kakao.maps.LatLng(store?.y_dnts, store?.x_cnts);
+        const markerPosition = new window.kakao.maps.LatLng(store?.lat, store?.lng);
 
         // 마커를 생성합니다
         const marker = new window.kakao.maps.Marker({
@@ -29,7 +30,7 @@ const Markers = ({ map, stores, setCurrentStore }: MarkerProps) => {
         marker.setMap(map);
 
         // 마커 커서가 오버되었을 때 윈포윈도우 생성
-        const content = `<div class="infowindow">${store?.upso_nm}</div>`;
+        const content = `<div class="infowindow">${store?.name}</div>`;
 
         const customOverlay = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
