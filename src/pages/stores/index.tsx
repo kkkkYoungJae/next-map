@@ -1,18 +1,56 @@
+import Loader from "@/components/Loader";
 import Loading from "@/components/Loading";
+import useIntersectionObserver from "@/hooks/useIntersectionObserver";
 import { StoreType } from "@/interface";
 import axios from "axios";
 import Image from "next/image";
-import { useQuery } from "react-query";
+import { Fragment, useCallback, useEffect, useRef } from "react";
+import { useInfiniteQuery } from "react-query";
 
 const StoreListPage = () => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const pageRef = useIntersectionObserver(ref, {});
+  const isPageEnd = !!pageRef?.isIntersecting;
+
+  const fetchStores = async ({ pageParam = 1 }) => {
+    const { data } = await axios(`/api/stores?page=${pageParam}`, {
+      params: { limit: 10, page: pageParam },
+    });
+
+    return data;
+  };
+
   const {
-    isLoading,
-    isError,
     data: stores,
-  } = useQuery("stores", async () => {
-    const { data } = await axios("/api/stores");
-    return data as StoreType[];
+    isFetching,
+    fetchNextPage,
+    isFetchingNextPage,
+    hasNextPage,
+    isError,
+    isLoading,
+  } = useInfiniteQuery("stores", fetchStores, {
+    getNextPageParam: (lastPage: any) =>
+      lastPage.data?.length > 0 ? lastPage.page + 1 : undefined,
   });
+
+  const fetchNext = useCallback(async () => {
+    const res = await fetchNextPage();
+    if (res.isError) {
+      console.log(res.error);
+    }
+  }, [fetchNextPage]);
+
+  useEffect(() => {
+    let timerId: NodeJS.Timeout | undefined;
+
+    if (isPageEnd && hasNextPage) {
+      timerId = setTimeout(() => {
+        fetchNext();
+      }, 500);
+    }
+
+    return () => clearTimeout(timerId);
+  }, [fetchNext, hasNextPage, isPageEnd]);
 
   if (isError) {
     return (
@@ -28,36 +66,48 @@ const StoreListPage = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          stores?.map((store, index) => (
-            <li className="flex justify-between gap-x-6 py-5" key={index}>
-              <div className="flex gap-x-4">
-                <Image
-                  src={
-                    store?.category
-                      ? `/images/markers/${store?.category}.png`
-                      : "/images/markers/default.png"
-                  }
-                  alt="icon image"
-                  width={48}
-                  height={48}
-                />
-                <div>
-                  <div className="text-sm font-semibold leading-6 text-gray-900">{store.name}</div>
-                  <div className="mt-1 text-xs truncate font-semibold leading-5 text-gray-500">
-                    {store.storeType}
+          stores?.pages.map((page, index) => (
+            <Fragment key={index}>
+              {page.data.map((store: StoreType, i: number) => (
+                <li className="flex justify-between gap-x-6 py-5" key={i}>
+                  <div className="flex gap-x-4">
+                    <Image
+                      src={
+                        store?.category
+                          ? `/images/markers/${store?.category}.png`
+                          : "/images/markers/default.png"
+                      }
+                      alt="icon image"
+                      width={48}
+                      height={48}
+                    />
+                    <div>
+                      <div className="text-sm font-semibold leading-6 text-gray-900">
+                        {store.name}
+                      </div>
+                      <div className="mt-1 text-xs truncate font-semibold leading-5 text-gray-500">
+                        {store.storeType}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="hidden sm:flex sm:flex-col sm:items-end">
-                <div className="text-sm font-semibold leading-6 text-gray-900">{store.address}</div>
-                <div className="mt-1 text-xs truncate font-semibold leading-5 text-gray-500">
-                  {store.phone || "번호 없음"} | {store.foodCertifyName} | {store.category}
-                </div>
-              </div>
-            </li>
+                  <div className="hidden sm:flex sm:flex-col sm:items-end">
+                    <div className="text-sm font-semibold leading-6 text-gray-900">
+                      {store.address}
+                    </div>
+                    <div className="mt-1 text-xs truncate font-semibold leading-5 text-gray-500">
+                      {store.phone || "번호 없음"} | {store.foodCertifyName} | {store.category}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </Fragment>
           ))
         )}
       </ul>
+
+      {(isFetching || hasNextPage || isFetchingNextPage) && <Loader />}
+
+      <div ref={ref} className="w-full touch-none h-10 mb-10" />
     </div>
   );
 };
