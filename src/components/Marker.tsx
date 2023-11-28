@@ -1,12 +1,15 @@
+import { mapState } from "@/atom";
 import { StoreType } from "@/interface";
 import { useEffect } from "react";
+import { useRecoilValue } from "recoil";
 
 interface MarkerProps {
-  map: any;
   store: StoreType;
 }
 
-const Marker = ({ map, store }: MarkerProps) => {
+const Marker = ({ store }: MarkerProps) => {
+  const map = useRecoilValue(mapState);
+
   const loadKakaoMarker = () => {
     if (map && store) {
       // 현재 선택한 식당 데이터 마커 하나 띄우기

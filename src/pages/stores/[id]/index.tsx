@@ -4,14 +4,11 @@ import Marker from "@/components/Marker";
 import { StoreType } from "@/interface";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useState } from "react";
 import { useQuery } from "react-query";
 
 const StorePage = () => {
   const router = useRouter();
   const { id } = router.query;
-
-  const [map, setMap] = useState(null);
 
   const fetchStore = async () => {
     const { data } = await axios(`/api/stores?id=${id}`);
@@ -114,8 +111,8 @@ const StorePage = () => {
       </div>
       {isSuccess && (
         <div className="overflow-hidden w-full mb-20 max-w-5xl mx-auto max-h-[600px]">
-          <Map lat={store.lat} lng={store.lng} zoom={1} setMap={setMap} />
-          <Marker map={map} store={store} />
+          <Map lat={store.lat} lng={store.lng} zoom={1} />
+          <Marker store={store} />
         </div>
       )}
     </>

@@ -1,13 +1,16 @@
+import { currentStoreState, mapState } from "@/atom";
 import { StoreType } from "@/interface";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { useEffect } from "react";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 interface MarkerProps {
-  map: any;
   stores: StoreType[];
-  setCurrentStore: Dispatch<SetStateAction<any>>;
 }
 
-const Markers = ({ map, stores, setCurrentStore }: MarkerProps) => {
+const Markers = ({ stores }: MarkerProps) => {
+  const map = useRecoilValue(mapState);
+  const setCurrentStore = useSetRecoilState(currentStoreState);
+
   const loadKakaoMarkers = () => {
     if (map) {
       stores.map((store) => {
@@ -17,8 +20,15 @@ const Markers = ({ map, stores, setCurrentStore }: MarkerProps) => {
         const imageSize = new window.kakao.maps.Size(40, 40);
         const imageOption = { offset: new window.kakao.maps.Point(27, 69) };
 
-        const markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
-        const markerPosition = new window.kakao.maps.LatLng(store?.lat, store?.lng);
+        const markerImage = new window.kakao.maps.MarkerImage(
+          imageSrc,
+          imageSize,
+          imageOption
+        );
+        const markerPosition = new window.kakao.maps.LatLng(
+          store?.lat,
+          store?.lng
+        );
 
         // 마커를 생성합니다
         const marker = new window.kakao.maps.Marker({
